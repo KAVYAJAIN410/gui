@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MapLibre Integration</title>
+  <!-- Include ECharts and Navigo -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.3.1/echarts.min.js"></script>
+  <script src="https://unpkg.com/navigo"></script>
+  <!-- Include MapLibre CSS and JS from alternative sources -->
+  <link href="/Users/kavyajain/Desktop/GROUND/src/styles/maplibre-gl.css" rel="stylesheet">
+<script src="/Users/kavyajain/Desktop/GROUND/src/styles/maplibre-gl.js"></script>
+
+  <style>
+    /* Base button styling */
+/* Base button styling */
+.btn {
+  background-color: #d8ecec; /* Light background */
+  padding: 10px 20px;
+  border: 2px solid black;
+  border-radius: 40px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  color: black; /* Ensure consistent text color */
+}
+
+/* Hover effect */
+.btn:hover {
+  background-color: #555; /* Slightly darker background on hover */
+  border-color: gray; 
+  color: white; /* Change text color on hover */
+}
+
+/* Selected state */
+.btn.selected {
+  background-color: #555; /* Keep the background color the same */
+  border-color: black; /* Maintain original border color */
+  color: white; /* Keep text color consistent */
+}
+
+/* Deselect effect */
+.btn.deselected {
+  background-color: #d8ecec; /* Revert to original background color */
+  border-color: black; /* Revert to original border color */
+  color: black; /* Revert to original text color */
+}
+
+      :root {
+        --primary-bg-color: #AADAD7;
+        --secondary-bg-color: #5DD3D4;
+        --highlight-bg-color: #D5E9EA;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #d8ecec;
+      }
+      .hidden {
+        display: none;
+      }
+      
+      .routes {
+        border: 2px solid black;
+        background-color: #d8ecec; ;
+        border-radius: 20px;
+        margin: 2px 20px;
+        padding: 2px;
+        width: 100px;
+        cursor: pointer;
+
+      }
+      .container {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        height: 100vh;
+      }
+      .left {
+        padding: 20px;
+        width: 400px;
+      }
+      #right_2{
+        padding: 20px;
+        width: 400px;
+      
+      }
+      .right {
+        padding: 20px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .chart-container {
+        display: flex;
+       
+        gap: 20px;
+      }
+      .chart {
+        flex: 1 1 45%;
+        width: 450px;
+        height: 300px;
+        border: 2px solid black;
+        background-color: var(--primary-bg-color);
+        border-radius: 20px;
+        margin: 20px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #333;
+        padding: 10px 20px;
+      }
+      .header-left {
+        font-size: 1.2em;
+      }
+      .header-center {
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+      #map{
+        width:100%;
+        border: 2px solid black;
+        border-radius: 20px;
+        background-color: #AADAD7;
+        height: 400px;
+      }
+      .param{
+  
+        border: 2px solid black;
+        border-radius: 10px;
+        width: 250px;
+        padding:10px;
+        background-color:#AADAD7;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+  
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+  
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+      }
+  
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+  
+      input:checked + .slider {
+        background-color: #4CAF50;
+      }
+  
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+      .routes.selected {
+        background-color: #555; /* Keep the background color the same */
+        border-color: black; /* Maintain original border color */
+        color: white; /* Keep text color consistent */
+      }
+    </style>
+  </head>
+  <body>
+    <header style="background-color: var(--secondary-bg-color);border:2px solid black">
+      <div class="header-left" id="clock" style="background-color:black;color:#5DD3D4;padding:10px;border-radius:10px">00:00:00</div>
+      <div class="header-center">Team B</div>
+      <div class="btn" style="padding-right:20px;padding-left:20px;border-radius:10px;" id="soil" >soil</div>
+    </header>
+    
+    <div class="container" id="cont">
+      <div class="left" id="lef">
+        <div style="border: 2px solid black; border-radius: 20px; background-color: var(--primary-bg-color); margin: 20px; height: 40%;">
+          <p style="padding: 10px;">Mode: SIMULATION</p>
+          <p style="padding: 10px;">State:</p>
+          <p id="packet" style="padding: 10px;">Packet_Count</p>
+          <p style="padding: 10px;">SD_DEPLOYED</p>
+        </div>
+        <div style="border: 2px solid black; border-radius: 20px; background-color: var(--primary-bg-color); margin: 20px; height: 40%;">
+          <div style="display: flex;margin:10px">
+         
+      <label class="switch">
+        
+        <input type="checkbox" id="serial-port-toggle">
+        <span class="slider round"></span>
+     
+      </label>
+      <label style="padding: 10px; font-weight: bold;">CX</label>
+    </div>
+    <div style="display: flex;margin:10px">
+         
+      <label class="switch">
+        
+        <input type="checkbox">
+        <span class="slider round"></span>
+     
+      </label>
+      <label style="padding: 10px; font-weight: bold;">BCN</label>
+    </div>
+    <div style="display:flex; justify-content:space-between">
+    <div style="padding:5px; padding-left:10px; padding-right:10px;border-radius:40px;margin:10px" class="btn">SIM ENABLE</div>
+    <div style="padding:5px; padding-left:10px; padding-right:10px;border-radius:40px;margin:10px" class="btn">SIM ACTIVATE</div>
+  </div>
+  <div style="display:flex; justify-content:space-between">
+    <div style="padding:5px; padding-left:10px; padding-right:10px;border-radius:40px;margin:10px" class="btn">SIM DISABLE</div>
+    <div style="padding:5px; padding-left:10px; padding-right:10px;border:2px solid black;border-radius:40px;margin:10px" class="btn">PRESSURE</div>
+  </div>
+  <div style="display:flex; justify-content:space-between">
+    <div style="padding:5px; width:30%; margin:10px" class="btn">CAL</div>
+    <div style="padding:5px; width:30%;border-radius:40px;margin:10px" class="btn">SIMP</div>
+    <div style="padding:5px; width:30%;border-radius:40px;margin:10px" class="btn">ST</div>
+  </div>
+
+        </div>
+     
+      </div>
+      <div class="right">
+        <div id="gps-content" class="hidden">
+        
+          <center>
+            <div style="display: flex; justify-content: space-between; background-color: var(--secondary-bg-color); width: fit-content; border: 2px solid black; border-radius: 10px;">
+              <div class="routes" data-route="gps">GPS</div>
+              <div class="routes" data-route="graph1">GRAPH 1</div>
+              <div class="routes" data-route="graph2">GRAPH 2</div>
+            </div>
+          </center>
+              <h2>GPS:</h2>
+              <div id="map"></div>
+              <div id="gps_params">
+               <div style="display: flex; justify-content:space-between; margin-top:20px">
+               <div class="param" id="gps_time">GPS_TIME:</div>
+               <div class="param" id="gps_alt">GPS_ALTITUDE:</div>
+               <div class="param" id="gps_lat">GPS_LATITUDE</div>
+               </div>
+               <div style="display: flex; justify-content:space-around;margin:20px">
+                <div class="param" is="gps_long">GPS_LONGITUDE:</div>
+               <div class="param" id="gps_stats">GPS_STATS:</div>
+               </div>
+          </div>
+        </div>
+        <div id="graph1-content" class="hidden">
+          <!-- Graph 1 content -->
+          <center>
+            <div style="display: flex; justify-content: space-between; background-color: var(--secondary-bg-color); width: fit-content; border: 2px solid black; border-radius: 10px;">
+              <div class="routes" data-route="gps" class="btn">GPS</div>
+              <div class="routes" data-route="graph1" class="btn">GRAPH 1</div>
+              <div class="routes" data-route="graph2" class="btn">GRAPH 2</div>
+            </div>
+          </center>
+          <div class="chart-container">
+            <div>
+              <h2 id="temp">Temperature:</h2>
+            <div id="temperature-chart" class="chart"></div>
+          </div>
+          <div>
+            <h2 id="air">Air_Speed:</h2>
+            <div id="airSpeed-chart" class="chart"></div>
+          </div>
+          </div>
+          <div class="chart-container">
+            <div>
+              <h2 id="alt">Altitude:</h2>
+            <div id="altitude-chart" class="chart"></div>
+            </div>
+            <div>
+              <h2 id="press">Pressure:</h2>
+            <div id="pressure-chart" class="chart"></div>
+            </div>
+          </div>
+        </div>
+  
+        <div id="graph2-content" class="hidden">
+          <!-- Graph 2 content -->
+          <center>
+            <div style="display: flex; justify-content: space-between; background-color: var(--secondary-bg-color); width: fit-content; border: 2px solid black; border-radius: 10px;">
+              <div class="routes" data-route="gps">GPS</div>
+              <div class="routes" data-route="graph1">GRAPH 1</div>
+              <div class="routes" data-route="graph2">GRAPH 2</div>
+            </div>
+          </center>
+          <div class="chart-container">
+            <div>
+              <h2 id="x">TILT_X</h2>
+            <div id="tilt_x-chart" class="chart"></div>
+          </div>
+          <div>
+            <h2 id="y">TILT_Y</h2>
+            <div id="tilt_y-chart" class="chart"></div>
+          </div>
+          </div>
+          <div class="chart-container">
+            <div>
+              <h2 id="z">ROT_Z</h2>
+            <div id="ROT_Z-chart" class="chart"></div>
+            </div>
+            <div>
+              <h2 id="vol">VOLTAGE:</h2>
+            <div id="VOLTAGE-chart" class="chart"></div>
+            </div>
+          </div>
+        </div>
+    </div>
+     <div id="right_2" style="display: none;height:85%">
+      <div style="height:100%; border:2px black solid;
+        border-radius:10px;background-color:#AADAD7; padding:20px">
+        <center style="margin: 10px;">
+          SEED_GERMINATION_PARAMETERS
+          <br>
+          Pigeon Pea Seed
+        </center>
+        <h3>SOIL SENSORS</h3>
+        <p>NITROGEN:</p>
+        <p>PHOSPHOROUS:</p>
+        <p>POTASSIUM:</p>
+        <p>TEMPERATURE:</p>
+        <p>HUMIDITY:</p>
+        <p>SOIL MOISTURE:</p>
+        <h3>FINAL CONCLUSION:</h3>
+      </div>
+    </div>
+    </div>
+    
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const buttons = document.querySelectorAll('.btn');
+
+      buttons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Toggle the selected state
+          this.classList.toggle('selected');
+          
+          // If deselecting, remove the selected class
+          if (!this.classList.contains('selected')) {
+            this.classList.add('deselected');
+          } else {
+            this.classList.remove('deselected');
+          }
+        });
+      });
+    });
+    let toggle = 1;
+      document.getElementById("soil").onclick = () => {
+        if (toggle==1) {
+          toggle = 0;
+          document.getElementById("lef").style.display = "none";
+          document.getElementById("cont").style.gridTemplateColumns = "1fr auto";
+          document.getElementById("right_2").style.display = "block";
+        } else {
+          toggle = 1;
+          document.getElementById("right_2").style.display = "none";
+          document.getElementById("cont").style.gridTemplateColumns = "auto 1fr";
+          document.getElementById("lef").style.display = "block";
+        }
+      };
+  
+      const router = new Navigo('/', { hash: true });
+
+      const showContent = (route) => {
+        const contents = {
+          gps: 'gps-content',
+          graph1: 'graph1-content',
+          graph2: 'graph2-content'
+        };
+      
+        Object.keys(contents).forEach(key => {
+          const contentElement = document.getElementById(contents[key]);
+          if (key === route) {
+            contentElement.classList.remove('hidden');
+            contentElement.style.backgroundColor = "#d8ecec"; // Active background color
+          } else {
+            contentElement.classList.add('hidden');
+            contentElement.style.backgroundColor = ""; // Reset background color
+          }
+        });
+      };
+      
+      const setSelected = (route) => {
+        document.querySelectorAll('.routes').forEach(routeElement => {
+          if (routeElement.getAttribute('data-route') === route) {
+            routeElement.classList.add('selected');
+          } else {
+            routeElement.classList.remove('selected');
+          }
+        });
+      };
+      
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.routes').forEach(routeElement => {
+          routeElement.addEventListener('click', function () {
+            const route = routeElement.getAttribute('data-route');
+            router.navigate(route);
+            setSelected(route);
+            showContent(route);
+          });
+        });
+      
+        router.on({
+          gps: function () {
+            showContent('gps');
+            setSelected('gps');
+          },
+          graph1: function () {
+            showContent('graph1');
+            setSelected('graph1');
+          },
+          graph2: function () {
+            showContent('graph2');
+            setSelected('graph2');
+          }
+        }).resolve();
+      });
+      
+    
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+  
+    // Update the clock every second
+    setInterval(updateClock, 1000);
+    let map;
+
+    function initializeMap() {
+      map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [0, 0], // Initial position [longitude, latitude]
+        zoom: 2
+      });
+    }
+
+    function updateMap(longitude, latitude) {
+      if (!isNaN(longitude) && !isNaN(latitude)) {
+        map.setCenter([longitude, latitude]);
+        map.setZoom(12);
+      }
+    }
+
+    const initializeCharts = () => {
+      const temperatureChart = echarts.init(document.getElementById('temperature-chart'));
+      const airSpeedChart = echarts.init(document.getElementById('airSpeed-chart'));
+      const altitudeChart = echarts.init(document.getElementById('altitude-chart'));
+      const pressureChart = echarts.init(document.getElementById('pressure-chart'));
+      let tiltXChart = echarts.init(document.getElementById('tilt_x-chart'));
+    let tiltYChart = echarts.init(document.getElementById('tilt_y-chart'));
+    let rotZChart = echarts.init(document.getElementById('ROT_Z-chart'));
+    let voltageChart = echarts.init(document.getElementById('VOLTAGE-chart'));
+      
+      const createChartOption = (title) => ({
+        title: { text: title },
+        tooltip: {},
+        xAxis: {
+          type: 'value',
+          boundaryGap: false,
+          min: 0,
+          max: 30,
+          axisLabel: {
+            formatter: '{value} s',
+            fontSize: 14, // Increase font size for axis labels
+            fontWeight: 'bold' // Make axis label text bold
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#333', // Change axis line color if needed
+              width: 3 // Increase axis line width
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#ddd', // Change split line color if needed
+              width: 1 // Increase split line width
+            }
+          }
+        },
+        yAxis: {
+          axisLabel: {
+            fontSize: 14, // Increase font size for axis labels
+            fontWeight: 'bold' // Make axis label text bold
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#333', // Change axis line color if needed
+              width: 3 // Increase axis line width
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#ddd', // Change split line color if needed
+              width: 1 // Increase split line width
+            }
+          }
+        },
+        series: [{
+          name: title,
+          type: 'line',
+          data: [],
+          showSymbol: false,
+          lineStyle: {
+            width: 3,
+            color: 'blue'
+          },
+          animation: true,
+          animationDuration: 1000,
+          animationEasing: 'linear'
+        }]
+      });
+      
+      
+      const temperatureOption = createChartOption('Temperature');
+      const airSpeedOption = createChartOption('Air Speed');
+      const altitudeOption = createChartOption('Altitude');
+      const pressureOption = createChartOption('Pressure');
+      const tilt_xOption = createChartOption('Tilt_x');
+      const tilt_yOption = createChartOption('Tilt_y');
+      const rot_ZOption = createChartOption('Rot_Z');
+      const VoltageOption = createChartOption('Voltage');
+      
+      temperatureChart.setOption(temperatureOption);
+      airSpeedChart.setOption(airSpeedOption);
+      altitudeChart.setOption(altitudeOption);
+      pressureChart.setOption(pressureOption);
+       tiltXChart.setOption(tilt_xOption)
+      tiltYChart.setOption(tilt_yOption)
+      rotZChart.setOption(rot_ZOption)
+      voltageChart.setOption(VoltageOption)
+      
+      let startTime = new Date().getTime();
+      
+      window.electron.onSerialData((data) => {
+        const values = data.split(',');
+          const temperature = values[9];
+          const airSpeed = values[6];
+          const altitude = values[5];
+          const pressure = values[11];
+          const Packet_Count = values[2];
+          const tilt_x = values[17];
+          const tilt_y = values[18];
+          const rotZ = values[19];
+          const voltage = values[10];
+          const GPS_STATS=values[16];
+          const GPS_LATITUDE=values[14];
+          const GPS_LONGITUDE=values[15];
+          const elapsedSeconds = Math.floor((new Date().getTime() - startTime) / 1000);
+          updateChart(temperatureChart, temperatureOption, elapsedSeconds, temperature);
+          updateChart(airSpeedChart, airSpeedOption, elapsedSeconds, airSpeed);
+          updateChart(altitudeChart, altitudeOption, elapsedSeconds, altitude);
+          updateChart(pressureChart, pressureOption, elapsedSeconds, pressure);
+          updateChart(tiltXChart, tilt_xOption, elapsedSeconds, tilt_x);
+          updateChart(tiltYChart, tilt_yOption, elapsedSeconds, tilt_y);
+          updateChart(rotZChart, rot_ZOption, elapsedSeconds, rotZ);
+          updateChart(voltageChart, VoltageOption, elapsedSeconds,voltage);
+          let tempRender=document.getElementById("temp");
+          tempRender.innerHTML=`Temperature: ${temperature}`;
+          let airRender=document.getElementById("air");
+          airRender.innerHTML=`Air_Speed: ${airSpeed}`;
+          let altiRender=document.getElementById("alt");
+          altiRender.innerHTML=`Altitude: ${altitude}`;
+          let pressRender=document.getElementById("press");
+          pressRender.innerHTML=`Pressure: ${pressure}`;
+          document.getElementById("packet").innerHTML = `Packet_Count: ${Packet_Count}`;
+          document.getElementById('x').innerHTML=`Tilt_X: ${tilt_x}`;
+          document.getElementById('y').innerHTML=`Tilt_Y: ${tilt_y}`;
+          document.getElementById('z').innerHTML=`Rot_Z: ${rotZ}`;
+          document.getElementById('vol').innerHTML=`Voltage: ${voltage}`;
+          document.getElementById('gps_stats').innerHTML=`GPS_STATS: ${GPS_STATS}`;
+          document.getElementById('gps_lat').innerHTML=`GPS_LATITUDE: ${GPS_LATITUDE}`;
+          document.getElementById('gps_long').innerHTML=`GPS_LONGITUDE: ${GPS_LONGITUDE}`;
+        
+      });
+      
+      function updateChart(chart, option, elapsedSeconds, value) {
+        option.series[0].data.push([elapsedSeconds, value]);
+        option.series[0].data = option.series[0].data.filter(([time]) => time >= (elapsedSeconds - 30));
+        const timeSpan = Math.min(elapsedSeconds, 30);
+        option.xAxis.min = Math.max(0, elapsedSeconds - 30);
+        option.xAxis.max = timeSpan + (elapsedSeconds > 30 ? elapsedSeconds - 30 : 0);
+        chart.setOption(option);
+      }
+    };
+    let serialPortOpen = false;
+
+    document.getElementById("serial-port-toggle").onchange = async (event) => {
+      if (event.target.checked) {
+        try {
+          await openSerialPort();  // Open the serial port
+          serialPortOpen = true;
+          console.log('Serial port opened');
+        } catch (error) {
+          console.error('Failed to open serial port:', error);
+          event.target.checked = false;  // Revert the switch if opening fails
+        }
+      } else {
+        if (serialPortOpen) {
+          closeSerialPort();  // Close the serial port
+          serialPortOpen = false;
+          console.log('Serial port closed');
+        }
+      }
+    };
+   
+    async function openSerialPort() {
+      // Implement your logic to open the serial port here
+      console.log('Serial port opening...');
+      window.electron.startSerialPort();
+      startTime=new Date().getTime();
+      initializeCharts();
+      initializeMap();
+      serialPortOpen=true;
+    }
+
+    function closeSerialPort() {
+      window.electron.closeSerialPort();
+      console.log('Serial port closing...');
+      serialPortOpen=false;
+      // Example: Close the serial port
+      // e.g., port.close();
+    }
+      router.on({
+        'gps': () => showContent('gps-content'),
+        'graph1': () => {
+          showContent('graph1-content');
+        },
+        'graph2': () => showContent('graph2-content')
+      }).resolve();
+      
+      document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('routes')) {
+          const route = e.target.dataset.route;
+          router.navigate(route);
+        }
+      });
+      router.navigate('graph1');
+    
+  </script>
+</body>
+</html>
